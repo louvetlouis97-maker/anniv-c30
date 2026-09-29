@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Caroline 30 · Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+<div class="wrap wide">
+  <header style="padding-bottom:10px">
+    <div class="kicker">Coulisses · réservé à Louis</div>
+    <h1 style="font-size:clamp(48px,10vw,84px)">La rédaction</h1>
+    <div class="rule"></div>
+  </header>
+
+  <div id="login" class="center">
+    <p>Connecte-toi avec ton compte Google autorisé.</p>
+    <button class="btn small" id="loginBtn">Se connecter avec Google</button>
+    <p class="status err" id="loginErr"></p>
+  </div>
+
+  <div id="app" hidden>
+    <div class="stats" id="stats"></div>
+    <div class="toolbar">
+      <button class="btn ghost" id="csvBtn">⬇ Réponses (Excel/CSV)</button>
+      <button class="btn ghost" id="zipBtn">⬇ Toutes les photos (ZIP)</button>
+      <button class="btn ghost" id="refreshBtn">↻ Actualiser</button>
+      <button class="btn ghost" id="logoutBtn">Déconnexion</button>
+    </div>
+    <div class="tabs" id="tabs"></div>
+    <div id="view"></div>
+  </div>
+</div>
+<div class="lightbox" id="lb"><img alt=""></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { firebaseConfig, ADMIN_EMAIL } from "./firebase-config.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+let reponses = [], photos = null, current = "personnes";
+
+const QUESTIONS = [
+  { key: "anecdote", label: "Anecdotes" },
+  { key: "mot", label: "Mots pour Caroline" },
+  { key: "musique", label: "Musiques" },
+  { key: "conseil", label: "Conseils trentaine" },
+  { key: "dizaine", label: "Caroline à 40 ans" },
+  { key: "cocker", label: "Vacheries de cocker" },
+];
+const musique = (r) => [r.musiqueTitre, r.musiqueArtiste].filter(Boolean).join(" — ") + (r.musiquePourquoi ? `\n« ${r.musiquePourquoi} »` : "");
+const answer = (r, k) => (k === "musique" ? musique(r) : r[k]) || "";
+const fmtDate = (ts) => ts?.toDate ? ts.toDate().toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "";
+
+$("loginBtn").onclick = () => signInWithPopup(auth, new GoogleAuthProvider()).catch((e) => ($("loginErr").textContent = e.message));
+$("logoutBtn").onclick = () => signOut(auth);
+$("refreshBtn").onclick = () => load();
+$("lb").onclick = () => ($("lb").style.display = "none");
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { $("login").hidden = false; $("app").hidden = true; return; }
+  if (user.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    $("loginErr").textContent = `Le compte ${user.email} n'est pas autorisé.`;
+    await signOut(auth); return;
+  }
+  $("login").hidden = true; $("app").hidden = false;
+  load();
+});
+
+async function load() {
+  $("view").innerHTML = `<p class="center">Chargement…</p>`;
+  try {
+    const snap = await getDocs(query(collection(db, "reponses"), orderBy("createdAt", "desc")));
+    reponses = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    photos = null;
+    renderStats(); renderTabs(); render();
+  } catch (e) {
+    $("view").innerHTML = `<p class="center status err">Erreur de lecture : ${esc(e.message)}<br>Vérifie les règles Firestore et l'email admin.</p>`;
+  }
+}
+
+async function loadPhotos() {
+  if (photos) return photos;
+  const snap = await getDocs(query(collection(db, "photos"), orderBy("createdAt", "desc")));
+  photos = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  return photos;
+}
+
+function renderStats() {
+  const nbPh = reponses.reduce((a, r) => a + (r.nbPhotos || 0), 0);
+  const nbPers = new Set(reponses.map((r) => r.nom.trim().toLowerCase())).size;
+  $("stats").innerHTML = [[nbPers, "invités"], [reponses.length, "envois"], [nbPh, "photos"]]
+    .map(([n, l]) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`).join("");
+}
+
+function renderTabs() {
+  const tabs = [{ key: "personnes", label: "Par invité" }, { key: "photos", label: "Photos" }, ...QUESTIONS];
+  $("tabs").innerHTML = tabs.map((t) => `<button class="tab ${t.key === current ? "on" : ""}" data-k="${t.key}">${t.label}</button>`).join("");
+  $("tabs").querySelectorAll(".tab").forEach((b) => (b.onclick = () => { current = b.dataset.k; renderTabs(); render(); }));
+}
+
+async function render() {
+  const v = $("view");
+  if (current === "personnes") {
+    if (!reponses.length) { v.innerHTML = `<p class="center">Aucune réponse pour l'instant.</p>`; return; }
+    v.innerHTML = `<div class="list">${reponses.map((r) => `
+      <article class="card entry">
+        <div class="who">${esc(r.nom)}</div>
+        <div class="rel">${esc(r.lien)}${r.lien ? " · " : ""}${fmtDate(r.createdAt)}${r.nbPhotos ? ` · 📷 ${r.nbPhotos}` : ""}</div>
+        <dl>${QUESTIONS.filter((q) => answer(r, q.key)).map((q) => `<dt>${q.label}</dt><dd>${esc(answer(r, q.key))}</dd>`).join("")}</dl>
+      </article>`).join("")}</div>`;
+    return;
+  }
+  if (current === "photos") {
+    v.innerHTML = `<p class="center">Chargement des photos…</p>`;
+    const ph = await loadPhotos();
+    if (!ph.length) { v.innerHTML = `<p class="center">Aucune photo pour l'instant.</p>`; return; }
+    v.innerHTML = `<div class="gal">${ph.map((p, i) => `
+      <figure>
+        <img src="${p.image}" alt="" data-i="${i}">
+        <figcaption><b>${esc(p.nom)}</b>${p.legende ? `<p>${esc(p.legende)}</p>` : ""}
+        <a href="${p.image}" download="${fileName(p, i)}">Télécharger</a></figcaption>
+      </figure>`).join("")}</div>`;
+    v.querySelectorAll(".gal img").forEach((img) => (img.onclick = () => { $("lb").querySelector("img").src = img.src; $("lb").style.display = "flex"; }));
+    return;
+  }
+  const q = QUESTIONS.find((x) => x.key === current);
+  const items = reponses.filter((r) => answer(r, q.key));
+  v.innerHTML = items.length
+    ? `<div class="list">${items.map((r) => `<article class="card entry"><div class="who">${esc(r.nom)}</div><div class="txt">${esc(answer(r, q.key))}</div></article>`).join("")}</div>`
+    : `<p class="center">Personne n'a encore répondu à cette question.</p>`;
+}
+
+const slug = (s) => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase();
+const fileName = (p, i) => `${String(i + 1).padStart(3, "0")}_${slug(p.nom) || "invite"}.jpg`;
+
+$("csvBtn").onclick = () => {
+  const cols = [["Date", (r) => fmtDate(r.createdAt)], ["Nom", (r) => r.nom], ["Lien", (r) => r.lien], ["Nb photos", (r) => r.nbPhotos || 0],
+    ["Anecdote", (r) => r.anecdote], ["Mot pour Caroline", (r) => r.mot], ["Musique - titre", (r) => r.musiqueTitre], ["Musique - artiste", (r) => r.musiqueArtiste],
+    ["Musique - pourquoi", (r) => r.musiquePourquoi], ["Conseil trentaine", (r) => r.conseil], ["Caroline à 40 ans", (r) => r.dizaine], ["Vacherie de cocker", (r) => r.cocker]];
+  const cell = (x) => `"${String(x ?? "").replace(/"/g, '""')}"`;
+  const csv = [cols.map((c) => cell(c[0])).join(";"), ...reponses.map((r) => cols.map((c) => cell(c[1](r))).join(";"))].join("\r\n");
+  download(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }), "caroline-30-reponses.csv");
+};
+
+$("zipBtn").onclick = async () => {
+  const btn = $("zipBtn"); btn.disabled = true; btn.textContent = "Préparation du ZIP…";
+  try {
+    const ph = await loadPhotos();
+    const zip = new JSZip();
+    let legendes = "";
+    ph.forEach((p, i) => {
+      const name = fileName(p, i);
+      zip.file(name, p.image.split(",")[1], { base64: true });
+      legendes += `${name}\t${p.nom}\t${(p.legende || "").replace(/\s+/g, " ")}\n`;
+    });
+    zip.file("legendes.txt", "Fichier\tAuteur\tHistoire\n" + legendes);
+    download(await zip.generateAsync({ type: "blob" }), "caroline-30-photos.zip");
+  } finally { btn.disabled = false; btn.textContent = "⬇ Toutes les photos (ZIP)"; }
+};
+
+function download(blob, name) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+</script>
+</body>
+</html>

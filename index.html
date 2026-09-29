@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Caroline, 30 ans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">Édition spéciale · Numéro unique</div>
+    <h1>Caroline</h1>
+    <div class="thirty">30 ANS</div>
+    <div class="rule"></div>
+    <p class="intro">Pour ses 30 ans, je lui prépare un magazine rien qu'à elle (et quelques jeux pour la soirée). J'ai besoin de vous : vos photos, vos histoires, vos mots.</p>
+    <span class="secret">🤫 Chut, c'est une surprise</span>
+    <p class="sign">— Louis</p>
+  </header>
+
+  <form id="form" novalidate>
+    <section class="card">
+      <div class="qhead"><span class="num">00</span><h2>Qui es-tu ?</h2></div>
+      <p class="hint">Pour que je sache à qui attribuer tes pépites.</p>
+      <div class="row">
+        <div><label class="sm" for="nom">Prénom et nom <span class="req">*</span></label><input type="text" id="nom" maxlength="80" autocomplete="name" required></div>
+        <div><label class="sm" for="lien">Ton lien avec Caroline</label><input type="text" id="lien" maxlength="80" placeholder="Amie d'enfance, collègue, cousin…"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="qhead"><span class="num">01</span><h2>Tes photos</h2></div>
+      <p class="hint">Les plus belles, les plus drôles, les plus compromettantes. Raconte l'histoire de chacune si tu veux.</p>
+      <label class="drop" for="photoInput">
+        <strong>+ Ajouter des photos</strong>
+        <small>Jusqu'à 10 photos par envoi · compressées automatiquement</small>
+      </label>
+      <input type="file" id="photoInput" accept="image/*" multiple>
+      <div class="loading" id="photoLoading" hidden>Préparation des photos…</div>
+      <div class="grid" id="photoGrid"></div>
+    </section>
+
+    <section class="card">
+      <div class="qhead"><span class="num">02</span><h2>Une anecdote</h2></div>
+      <p class="hint">Un souvenir, une soirée, un fou rire, une bêtise… (avec ou sans photo)</p>
+      <textarea id="anecdote" maxlength="5000" placeholder="C'était un soir de…"></textarea>
+    </section>
+
+    <section class="card">
+      <div class="qhead"><span class="num">03</span><h2>Un mot pour Caroline</h2></div>
+      <p class="hint">Une déclaration, un merci, une dédicace. Lâche-toi.</p>
+      <textarea id="mot" maxlength="5000" placeholder="Caroline, …"></textarea>
+    </section>
+
+    <section class="card">
+      <div class="qhead"><span class="num">04</span><h2>Une musique</h2></div>
+      <p class="hint">Celle qui te fait penser à elle, ou celle qu'elle doit absolument danser le jour J.</p>
+      <div class="row">
+        <div><label class="sm" for="musiqueTitre">Titre</label><input type="text" id="musiqueTitre" maxlength="150"></div>
+        <div><label class="sm" for="musiqueArtiste">Artiste</label><input type="text" id="musiqueArtiste" maxlength="150"></div>
+      </div>
+      <label class="sm" for="musiquePourquoi">Pourquoi celle-là ? <span class="opt">(facultatif)</span></label>
+      <input type="text" id="musiquePourquoi" maxlength="500" placeholder="Parce que…">
+    </section>
+
+    <section class="card">
+      <div class="qhead"><span class="num">05</span><h2>Ton meilleur conseil pour aborder la trentaine</h2></div>
+      <p class="hint">Sage, pratique ou totalement absurde.</p>
+      <textarea id="conseil" maxlength="3000"></textarea>
+    </section>
+
+    <section class="card">
+      <div class="qhead"><span class="num">06</span><h2>Comment je te vois à la prochaine dizaine</h2></div>
+      <p class="hint">Caroline à 40 ans : où, avec qui, en train de faire quoi ?</p>
+      <textarea id="dizaine" maxlength="3000"></textarea>
+    </section>
+
+    <section class="card">
+      <div class="qhead"><span class="num">07</span><h2>🐶 Si j'étais un cocker, quelle vacherie je te ferais ?</h2></div>
+      <p class="hint">Chaussons mâchouillés, flaque stratégique, regard de chien battu… à toi de jouer.</p>
+      <textarea id="cocker" maxlength="3000"></textarea>
+    </section>
+
+    <div class="submit">
+      <button type="submit" class="btn" id="btn">Envoyer mes réponses</button>
+      <div class="status" id="status"></div>
+    </div>
+  </form>
+
+  <div id="merci">
+    <div class="kicker">C'est dans la boîte</div>
+    <h2>Merci !</h2>
+    <p>Tes réponses sont bien arrivées. Et surtout, pas un mot à Caroline 🤫</p>
+    <button class="btn ghost" id="again">Envoyer d'autres photos ou réponses</button>
+  </div>
+
+  <footer>Les réponses ne sont visibles que par Louis.</footer>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { firebaseConfig } from "./firebase-config.js";
+
+const db = getFirestore(initializeApp(firebaseConfig));
+
+const MAX_PHOTOS = 10;
+const MAX_DATAURL = 900000; // une photo par document Firestore (limite 1 Mo)
+const $ = (id) => document.getElementById(id);
+let photos = [];
+
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()));
+
+function loadImg(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("format")); };
+    img.src = url;
+  });
+}
+
+// Redimensionne + compresse en JPEG jusqu'à passer sous la limite
+async function compress(file) {
+  const img = await loadImg(file);
+  let max = 2000, q = 0.85, out = "";
+  for (let i = 0; i < 12; i++) {
+    const s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement("canvas");
+    c.width = Math.round(img.naturalWidth * s);
+    c.height = Math.round(img.naturalHeight * s);
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    out = c.toDataURL("image/jpeg", q);
+    if (out.length < MAX_DATAURL) return out;
+    if (q > 0.65) q -= 0.1; else max = Math.round(max * 0.85);
+  }
+  throw new Error("trop lourde");
+}
+
+function renderPhotos() {
+  const grid = $("photoGrid");
+  grid.innerHTML = "";
+  photos.forEach((p) => {
+    const el = document.createElement("div");
+    el.className = "ph";
+    el.innerHTML = `<div class="imgbox"><img alt=""><button type="button" aria-label="Retirer">×</button></div>
+      <textarea maxlength="3000" placeholder="L'histoire derrière cette photo (facultatif)"></textarea>`;
+    el.querySelector("img").src = p.dataUrl;
+    const ta = el.querySelector("textarea");
+    ta.value = p.legende;
+    ta.addEventListener("input", () => (p.legende = ta.value));
+    el.querySelector("button").addEventListener("click", () => {
+      photos = photos.filter((x) => x.id !== p.id);
+      renderPhotos();
+    });
+    grid.appendChild(el);
+  });
+}
+
+$("photoInput").addEventListener("change", async (e) => {
+  const files = [...e.target.files];
+  e.target.value = "";
+  $("photoLoading").hidden = false;
+  let refused = 0;
+  for (const f of files) {
+    if (photos.length >= MAX_PHOTOS) { alert(`${MAX_PHOTOS} photos maximum par envoi. Tu pourras en envoyer d'autres juste après !`); break; }
+    try {
+      photos.push({ id: uid(), dataUrl: await compress(f), legende: "" });
+      renderPhotos();
+    } catch { refused++; }
+  }
+  $("photoLoading").hidden = true;
+  if (refused) alert(`${refused} photo(s) n'ont pas pu être lues (format non pris en charge, ex. HEIC sur certains ordinateurs).`);
+});
+
+const FIELDS = { lien: 80, anecdote: 5000, mot: 5000, musiqueTitre: 150, musiqueArtiste: 150, musiquePourquoi: 500, conseil: 3000, dizaine: 3000, cocker: 3000 };
+const val = (id, max) => ($(id).value || "").trim().slice(0, max);
+
+function setStatus(msg, isErr = false) {
+  $("status").textContent = msg;
+  $("status").className = "status" + (isErr ? " err" : "");
+}
+
+$("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const nom = val("nom", 80);
+  if (!nom) { setStatus("Indique ton prénom pour que je sache qui a répondu 🙂", true); $("nom").focus(); return; }
+  const payload = { nom };
+  for (const [k, max] of Object.entries(FIELDS)) payload[k] = val(k, max);
+  const hasContent = photos.length || Object.entries(payload).some(([k, v]) => k !== "nom" && k !== "lien" && v);
+  if (!hasContent) { setStatus("Remplis au moins une question ou ajoute une photo.", true); return; }
+  payload.nbPhotos = photos.length;
+  payload.createdAt = serverTimestamp();
+
+  const btn = $("btn");
+  btn.disabled = true;
+  try {
+    setStatus("Envoi des réponses…");
+    const ref = await addDoc(collection(db, "reponses"), payload);
+    for (let i = 0; i < photos.length; i++) {
+      setStatus(`Envoi des photos… ${i + 1}/${photos.length}`);
+      await addDoc(collection(db, "photos"), {
+        reponseId: ref.id, nom,
+        legende: photos[i].legende.trim().slice(0, 3000),
+        image: photos[i].dataUrl, ordre: i, createdAt: serverTimestamp()
+      });
+    }
+    $("form").style.display = "none";
+    $("merci").style.display = "block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch (err) {
+    console.error(err);
+    setStatus("Oups, l'envoi a échoué. Vérifie ta connexion et réessaie.", true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+$("again").addEventListener("click", () => {
+  const nom = $("nom").value, lien = $("lien").value;
+  $("form").reset();
+  $("nom").value = nom; $("lien").value = lien;
+  photos = []; renderPhotos(); setStatus("");
+  $("merci").style.display = "none";
+  $("form").style.display = "flex";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+</script>
+</body>
+</html>

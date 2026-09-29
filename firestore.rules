@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Seul ce compte Google peut lire les réponses (même adresse que dans firebase-config.js)
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'louvet.louis97@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    function str(v, max) { return v is string && v.size() <= max; }
+
+    // Réponses des invités : tout le monde peut ÉCRIRE, seul l'admin peut LIRE
+    match /reponses/{id} {
+      allow read, delete: if isAdmin();
+      allow update: if false;
+      allow create: if request.resource.data.keys().hasOnly([
+          'nom','lien','anecdote','mot','musiqueTitre','musiqueArtiste',
+          'musiquePourquoi','conseil','dizaine','cocker','nbPhotos','createdAt'])
+        && str(request.resource.data.nom, 80) && request.resource.data.nom.size() > 0
+        && str(request.resource.data.lien, 80)
+        && str(request.resource.data.anecdote, 5000)
+        && str(request.resource.data.mot, 5000)
+        && str(request.resource.data.musiqueTitre, 150)
+        && str(request.resource.data.musiqueArtiste, 150)
+        && str(request.resource.data.musiquePourquoi, 500)
+        && str(request.resource.data.conseil, 3000)
+        && str(request.resource.data.dizaine, 3000)
+        && str(request.resource.data.cocker, 3000)
+        && request.resource.data.nbPhotos is int && request.resource.data.nbPhotos <= 10
+        && request.resource.data.createdAt == request.time;
+    }
+
+    // Photos (stockées en JPEG compressé dans Firestore, 1 photo par document)
+    match /photos/{id} {
+      allow read, delete: if isAdmin();
+      allow update: if false;
+      allow create: if request.resource.data.keys().hasOnly(['reponseId','nom','legende','image','ordre','createdAt'])
+        && str(request.resource.data.reponseId, 40)
+        && str(request.resource.data.nom, 80)
+        && str(request.resource.data.legende, 3000)
+        && request.resource.data.image is string
+        && request.resource.data.image.size() < 1000000
+        && request.resource.data.ordre is int
+        && request.resource.data.createdAt == request.time;
+    }
+  }
+}

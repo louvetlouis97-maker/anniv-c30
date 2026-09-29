@@ -56,10 +56,12 @@ let reponses = [], photos = null, current = "personnes";
 const QUESTIONS = [
   { key: "anecdote", label: "Anecdotes" },
   { key: "mot", label: "Mots pour Caroline" },
+  { key: "adore", label: "Ce qu'on adore chez elle" },
   { key: "musique", label: "Musiques" },
   { key: "conseil", label: "Conseils trentaine" },
   { key: "dizaine", label: "Caroline à 40 ans" },
   { key: "cocker", label: "Vacheries de cocker" },
+  { key: "autres", label: "Autres" },
 ];
 const musique = (r) => [r.musiqueTitre, r.musiqueArtiste].filter(Boolean).join(" — ") + (r.musiquePourquoi ? `\n« ${r.musiquePourquoi} »` : "");
 const answer = (r, k) => (k === "musique" ? musique(r) : r[k]) || "";
@@ -149,8 +151,8 @@ const fileName = (p, i) => `${String(i + 1).padStart(3, "0")}_${slug(p.nom) || "
 
 $("csvBtn").onclick = () => {
   const cols = [["Date", (r) => fmtDate(r.createdAt)], ["Nom", (r) => r.nom], ["Lien", (r) => r.lien], ["Nb photos", (r) => r.nbPhotos || 0],
-    ["Anecdote", (r) => r.anecdote], ["Mot pour Caroline", (r) => r.mot], ["Musique - titre", (r) => r.musiqueTitre], ["Musique - artiste", (r) => r.musiqueArtiste],
-    ["Musique - pourquoi", (r) => r.musiquePourquoi], ["Conseil trentaine", (r) => r.conseil], ["Caroline à 40 ans", (r) => r.dizaine], ["Vacherie de cocker", (r) => r.cocker]];
+    ["Anecdote", (r) => r.anecdote], ["Mot pour Caroline", (r) => r.mot], ["Ce qu'on adore", (r) => r.adore], ["Musique - titre", (r) => r.musiqueTitre], ["Musique - artiste", (r) => r.musiqueArtiste],
+    ["Musique - pourquoi", (r) => r.musiquePourquoi], ["Conseil trentaine", (r) => r.conseil], ["Caroline à 40 ans", (r) => r.dizaine], ["Vacherie de cocker", (r) => r.cocker], ["Autres", (r) => r.autres]];
   const cell = (x) => `"${String(x ?? "").replace(/"/g, '""')}"`;
   const csv = [cols.map((c) => cell(c[0])).join(";"), ...reponses.map((r) => cols.map((c) => cell(c[1](r))).join(";"))].join("\r\n");
   download(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }), "caroline-30-reponses.csv");

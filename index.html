@@ -57,7 +57,13 @@
     </section>
 
     <section class="card">
-      <div class="qhead"><span class="num">04</span><h2>Une musique</h2></div>
+      <div class="qhead"><span class="num">04</span><h2>Ce qu'on adore chez toi</h2></div>
+      <p class="hint">Une qualité, une manie, un petit truc qui n'appartient qu'à elle.</p>
+      <textarea id="adore" maxlength="3000" placeholder="Ce que j'adore chez toi, c'est…"></textarea>
+    </section>
+
+    <section class="card">
+      <div class="qhead"><span class="num">05</span><h2>Une musique</h2></div>
       <p class="hint">Celle qui te fait penser à elle, ou celle qu'elle doit absolument danser le jour J.</p>
       <div class="row">
         <div><label class="sm" for="musiqueTitre">Titre</label><input type="text" id="musiqueTitre" maxlength="150"></div>
@@ -68,21 +74,27 @@
     </section>
 
     <section class="card">
-      <div class="qhead"><span class="num">05</span><h2>Ton meilleur conseil pour aborder la trentaine</h2></div>
+      <div class="qhead"><span class="num">06</span><h2>Ton meilleur conseil pour aborder la trentaine</h2></div>
       <p class="hint">Sage, pratique ou totalement absurde.</p>
       <textarea id="conseil" maxlength="3000"></textarea>
     </section>
 
     <section class="card">
-      <div class="qhead"><span class="num">06</span><h2>Comment je te vois à la prochaine dizaine</h2></div>
+      <div class="qhead"><span class="num">07</span><h2>Comment je te vois à la prochaine dizaine</h2></div>
       <p class="hint">Caroline à 40 ans : où, avec qui, en train de faire quoi ?</p>
       <textarea id="dizaine" maxlength="3000"></textarea>
     </section>
 
     <section class="card">
-      <div class="qhead"><span class="num">07</span><h2>🐶 Si j'étais un cocker, quelle vacherie je te ferais ?</h2></div>
+      <div class="qhead"><span class="num">08</span><h2>🐶 Si j'étais un cocker, quelle vacherie je te ferais ?</h2></div>
       <p class="hint">Chaussons mâchouillés, flaque stratégique, regard de chien battu… à toi de jouer.</p>
       <textarea id="cocker" maxlength="3000"></textarea>
+    </section>
+
+    <section class="card">
+      <div class="qhead"><span class="num">09</span><h2>Autres</h2></div>
+      <p class="hint">Tout ce qui ne rentre pas dans les cases : une idée de jeu, un secret, un souvenir en vrac, un message pour Louis…</p>
+      <textarea id="autres" maxlength="5000"></textarea>
     </section>
 
     <div class="submit">
@@ -180,7 +192,7 @@ $("photoInput").addEventListener("change", async (e) => {
   if (refused) alert(`${refused} photo(s) n'ont pas pu être lues (format non pris en charge, ex. HEIC sur certains ordinateurs).`);
 });
 
-const FIELDS = { lien: 80, anecdote: 5000, mot: 5000, musiqueTitre: 150, musiqueArtiste: 150, musiquePourquoi: 500, conseil: 3000, dizaine: 3000, cocker: 3000 };
+const FIELDS = { lien: 80, anecdote: 5000, mot: 5000, musiqueTitre: 150, musiqueArtiste: 150, musiquePourquoi: 500, adore: 3000, conseil: 3000, dizaine: 3000, cocker: 3000, autres: 5000 };
 const val = (id, max) => ($(id).value || "").trim().slice(0, max);
 
 function setStatus(msg, isErr = false) {

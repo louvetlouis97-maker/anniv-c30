@@ -7,24 +7,27 @@
 <title>Caroline, 30 ans</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=Pacifico&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="bg" aria-hidden="true"></div>
 <div class="wrap">
-  <header>
-    <div class="kicker">Édition spéciale · Numéro unique</div>
+  <header class="hero">
+    <span class="stamp">Top secret · Dossier C-30</span>
     <h1>Caroline</h1>
-    <div class="thirty">30 ANS</div>
-    <div class="rule"></div>
-    <p class="intro">Pour ses 30 ans, je lui prépare un magazine rien qu'à elle (et quelques jeux pour la soirée). J'ai besoin de vous : vos photos, vos histoires, vos mots.</p>
-    <span class="secret">🤫 Chut, c'est une surprise</span>
-    <p class="sign">— Louis</p>
+    <div class="script">Mission : 30 ans</div>
+    <div class="brief">
+      <p>Agent, ta mission si tu l'acceptes : m'aider à préparer un magazine rien qu'à elle (et quelques jeux pour la soirée). J'ai besoin de tes photos, de tes histoires et de tes mots.</p>
+      <span class="secret">🤫 Chut, c'est une surprise</span>
+      <div class="sign">— Louis, chef de mission</div>
+    </div>
+    <div class="scroll">Accepter la mission ↓</div>
   </header>
 
   <form id="form" novalidate>
     <section class="card">
-      <div class="qhead"><span class="num">00</span><h2>Qui es-tu ?</h2></div>
+      <div class="qhead"><span class="num">00</span><h2>Identifie-toi, agent</h2></div>
       <p class="hint">Pour que je sache à qui attribuer tes pépites.</p>
       <div class="row">
         <div><label class="sm" for="nom">Prénom et nom <span class="req">*</span></label><input type="text" id="nom" maxlength="80" autocomplete="name" required></div>
@@ -98,19 +101,21 @@
     </section>
 
     <div class="submit">
-      <button type="submit" class="btn" id="btn">Envoyer mes réponses</button>
+      <button type="submit" class="btn" id="btn">Mission accomplie : envoyer 💌</button>
       <div class="status" id="status"></div>
     </div>
   </form>
 
   <div id="merci">
-    <div class="kicker">C'est dans la boîte</div>
-    <h2>Merci !</h2>
-    <p>Tes réponses sont bien arrivées. Et surtout, pas un mot à Caroline 🤫</p>
-    <button class="btn ghost" id="again">Envoyer d'autres photos ou réponses</button>
+    <div class="card">
+      <span class="stamp">Transmission reçue</span>
+      <h2>Mission accomplie !</h2>
+      <p>Merci agent, tes infos sont bien arrivées au QG. Et surtout, pas un mot à Caroline 🤫</p>
+      <button class="btn small" id="again">Envoyer d'autres photos ou réponses</button>
+    </div>
   </div>
 
-  <footer>Les réponses ne sont visibles que par Louis.</footer>
+  <footer>Transmission cryptée · Les réponses ne sont visibles que par Louis 💗</footer>
 </div>
 
 <script type="module">
@@ -226,7 +231,7 @@ $("form").addEventListener("submit", async (e) => {
     }
     $("form").style.display = "none";
     $("merci").style.display = "block";
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    $("merci").scrollIntoView({ behavior: "smooth", block: "center" });
   } catch (err) {
     console.error(err);
     setStatus("Oups, l'envoi a échoué. Vérifie ta connexion et réessaie.", true);
@@ -242,7 +247,7 @@ $("again").addEventListener("click", () => {
   photos = []; renderPhotos(); setStatus("");
   $("merci").style.display = "none";
   $("form").style.display = "flex";
-  window.scrollTo({ top: 0, behavior: "smooth" });
+    $("form").scrollIntoView({ behavior: "smooth" });
 });
 </script>
 </body>
